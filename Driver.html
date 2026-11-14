@@ -581,41 +581,41 @@
       body.appendChild(passengerTitle);
 
       trip.passengers.forEach(function(person, personIndex) {
-        const passenger = document.createElement('div');
-        passenger.className = 'passenger';
+  const passenger = document.createElement('div');
+  passenger.className = 'passenger';
 
-        const name = document.createElement('strong');
-        name.textContent =
-          (personIndex + 1) + '. ' + person.fullName;
+  const name = document.createElement('strong');
+  name.textContent =
+    (personIndex + 1) + '. ' + person.fullName;
 
-        const phone = document.createElement('div');
-        phone.textContent = 'โทรศัพท์: ' + person.phone;
+  const phone = document.createElement('div');
+  phone.textContent = 'โทรศัพท์: ' + (person.phone || 'ไม่ระบุ');
 
-        const amount = document.createElement('div');
-        amount.textContent =
-          'จำนวนผู้โดยสาร: ' + person.passengerCount + ' คน';
+  const amount = document.createElement('div');
+  amount.textContent =
+    'จำนวนผู้โดยสาร: ' + person.passengerCount + ' คน';
 
-        const route = document.createElement('div');
-        route.className = 'route';
+  const route = document.createElement('div');
+  route.className = 'route';
 
-        const pickup = document.createElement('div');
-        pickup.textContent = 'จุดขึ้นรถ: ' + person.pickup;
+  const pickup = document.createElement('div');
+  pickup.textContent = 'จุดขึ้นรถ: ' + person.pickup;
 
-        const dropoff = document.createElement('div');
-        dropoff.textContent = 'จุดลงรถ: ' + person.dropoff;
+  const dropoff = document.createElement('div');
+  dropoff.textContent = 'จุดลงรถ: ' + person.dropoff;
 
-        route.append(pickup, dropoff);
+  route.append(pickup, dropoff);
 
-        passenger.append(name, phone, amount, route);
+  passenger.append(name, phone, amount, route);
 
-        if (person.note) {
-          const note = document.createElement('div');
-          note.textContent = 'หมายเหตุ: ' + person.note;
-          passenger.appendChild(note);
-        }
+  if (person.note) {
+    const note = document.createElement('div');
+    note.textContent = 'หมายเหตุ: ' + person.note;
+    passenger.appendChild(note);
+  }
 
-        body.appendChild(passenger);
-      });
+  body.appendChild(passenger);
+});
 
       card.append(heading, body);
       container.appendChild(card);

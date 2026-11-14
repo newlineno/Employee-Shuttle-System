@@ -1720,6 +1720,27 @@ function getDriverDashboardData(token) {
         arrival: formatTime(row[7])
       };
     });
+    // ==================================
+// กำหนดรอบที่คนขับคนนี้รับผิดชอบ
+// ==================================
+
+const myAssignmentKeys = new Set();
+
+assignmentRows.slice(1).forEach(row => {
+  if (String(row[8]).trim() !== 'เปิดใช้งาน') return;
+
+  const date = formatDate(row[1]);
+  const tripId = String(row[2] || '').trim();
+  const driverName = String(row[5] || '').trim();
+
+  if (!date || !tripId) return;
+
+  if (
+    driverName === String(session.driverName).trim()
+  ) {
+    myAssignmentKeys.add(date + '|' + tripId);
+  }
+});
 
     // ==================================
     // 4. สร้างกลุ่มรอบรถทั้งหมด
@@ -1868,29 +1889,33 @@ function getDriverDashboardData(token) {
       group.passengerCount += count;
 
       group.passengers.push({
-        bookingId: String(row[1] || ''),
-        bookingType: String(row[2] || ''),
-        fullName: String(row[3] || ''),
-        phone: String(row[4] || ''),
-        pickup: String(row[8] || ''),
-        dropoff: String(row[9] || ''),
-        passengerCount: count,
-        status: String(row[11] || ''),
-        note: String(row[12] || '')
-      });
+  bookingId: String(row[1] || ''),
+  bookingType: String(row[2] || ''),
+  fullName: String(row[3] || ''),
+  phone: String(row[4] || ''),
+  pickup: String(row[8] || ''),
+  dropoff: String(row[9] || ''),
+  passengerCount: count,
+  status: String(row[11] || ''),
+  note: String(row[12] || '')
+});
     });
 
     // ==================================
     // 8. เรียงลำดับรอบรถตามวันที่และเวลา
     // ==================================
 
-    const trips = Object.values(tripGroups).sort((a, b) => {
-      const dateCompare = a.date.localeCompare(b.date);
+    const trips = Object.values(tripGroups)
+  .filter(trip =>
+    myAssignmentKeys.has(trip.date + '|' + trip.tripId)
+  )
+  .sort((a, b) => {
+    const dateCompare = a.date.localeCompare(b.date);
 
-      if (dateCompare !== 0) return dateCompare;
+    if (dateCompare !== 0) return dateCompare;
 
-      return a.departure.localeCompare(b.departure);
-    });
+    return a.departure.localeCompare(b.departure);
+  });
 
     return {
       success: true,
