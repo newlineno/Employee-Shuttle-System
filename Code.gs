@@ -116,6 +116,7 @@ function setupDatabase() {
   // เพิ่มรอบประจำเริ่มต้นเฉพาะกรณีที่ยังไม่มีข้อมูลรอบ
   const tripSheet = ss.getSheetByName('รอบเดินรถ');
 
+  // หากชีตยังไม่มีข้อมูล ให้เพิ่มรอบเดิม R001-R004 ก่อน
   if (tripSheet.getLastRow() === 1) {
     const trips = [
       ['R001', 3, 'วันพุธ', 'พุธขาไป', 'ขาไป',
@@ -134,6 +135,34 @@ function setupDatabase() {
     tripSheet.getRange(2, 1, trips.length, 13)
       .setValues(trips);
   }
+
+  // เพิ่ม R005 และ R006 เฉพาะรหัสที่ยังไม่มีในชีต
+  const existingTripIds = tripSheet.getLastRow() >= 2
+    ? tripSheet.getRange(
+        2, 1, tripSheet.getLastRow() - 1, 1
+      ).getValues().flat().map(id => String(id).trim())
+    : [];
+
+  const newTrips = [
+    ['R005', 1, 'วันจันทร์', 'จันทร์ขากลับ', 'ขากลับ',
+      'ลาว', 'ลำปาง', '', '', '', '', 'เปิดใช้งาน', ''],
+
+    ['R006', 0, 'วันอาทิตย์', 'อาทิตย์ขาไป', 'ขาไป',
+      'ลำปาง', 'ลาว', '', '', '', '', 'เปิดใช้งาน', '']
+  ];
+
+  const tripsToAdd = newTrips.filter(
+    trip => !existingTripIds.includes(trip[0])
+  );
+
+  if (tripsToAdd.length > 0) {
+    const startRow = tripSheet.getLastRow() + 1;
+
+    tripSheet.getRange(
+      startRow, 1, tripsToAdd.length, 13
+    ).setValues(tripsToAdd);
+  }
+
 
   SpreadsheetApp.getUi().alert(
     'ตรวจสอบและเตรียมฐานข้อมูล Employee Shuttle เรียบร้อยแล้ว'
@@ -668,6 +697,7 @@ function hashAdminPassword_(password, salt, pepper) {
 
   return hash;
 }
+
 function loginAdmin(data) {
   const lock = LockService.getScriptLock();
 
@@ -840,9 +870,14 @@ function logoutAdmin(token) {
   return { success: true };
 }
 
+
 function getAvailableTrips(dateString) {
   try {
-    if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    // 1. ตรวจสอบรูปแบบวันที่
+    if (
+      !dateString ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(dateString)
+    ) {
       return {
         success: false,
         message: 'กรุณาเลือกวันที่เดินทาง'
@@ -853,6 +888,7 @@ function getAvailableTrips(dateString) {
     const timezone = 'Asia/Vientiane';
 
     const parts = dateString.split('-').map(Number);
+
     const travelDate = new Date(
       parts[0], parts[1] - 1, parts[2]
     );
@@ -868,89 +904,204 @@ function getAvailableTrips(dateString) {
     const weekday = travelDate.getDay();
     const trips = [];
 
-    // รอบประจำ
-    const regularSheet = ss.getSheetByName('รอบเดินรถ');
+    // 2. ฟังก์ชันแปลงวันที่ให้เป็น yyyy-MM-dd
+    function formatDate(value) {
+      if (!value) return '';
+
+      if (value instanceof Date) {
+        return Utilities.formatDate(
+          value, timezone, 'yyyy-MM-dd'
+        );
+      }
+
+      const text = String(value).trim();
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+        return text;
+      }
+
+      return text;
+    }
+
+    // 3. ฟังก์ชันแปลงเวลา
+    function formatTime(value) {
+  if (value === '' || value === null || value === undefined) {
+    return '';
+  }
+
+  // กรณี Google Sheets ส่งค่าเวลาเป็น Date
+  if (value instanceof Date) {
+    return Utilities.formatDate(
+      value, timezone, 'HH:mm'
+    );
+  }
+
+  // กรณี Google Sheets ส่งค่าเวลาเป็นตัวเลข
+  if (typeof value === 'number') {
+    const totalMinutes = Math.round(value * 1440) % 1440;
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    return String(hours).padStart(2, '0') + ':' +
+      String(minutes).padStart(2, '0');
+  }
+
+  return String(value).trim();
+}
+
+    // 4. อ่านข้อมูลการมอบหมายรถ
+    const assignmentSheet =
+      ss.getSheetByName('มอบหมายรถ');
+
+    if (!assignmentSheet) {
+      throw new Error('ไม่พบชีตมอบหมายรถ');
+    }
+
+    const assignmentData =
+      assignmentSheet.getDataRange().getValues();
+
+    // 5. ค้นหาการมอบหมายรถของแต่ละรอบ
+    function findAssignment(tripId) {
+      return assignmentData.find((row, index) => {
+        if (index === 0) return false;
+
+        return (
+          formatDate(row[1]) === dateString &&
+          String(row[2]).trim() === tripId &&
+          String(row[8]).trim() === 'เปิดใช้งาน'
+        );
+      });
+    }
+
+    // 6. โหลดรอบประจำ
+    const regularSheet =
+      ss.getSheetByName('รอบเดินรถ');
 
     if (!regularSheet) {
       throw new Error('ไม่พบชีตรอบเดินรถ');
     }
 
-    const regularData = regularSheet.getDataRange().getValues();
+    const regularData =
+      regularSheet.getDataRange().getValues();
 
     for (let i = 1; i < regularData.length; i++) {
       const row = regularData[i];
 
       if (
-        Number(row[1]) === weekday &&
-        String(row[11]).trim() === 'เปิดใช้งาน'
+        Number(row[1]) !== weekday ||
+        String(row[11]).trim() !== 'เปิดใช้งาน'
       ) {
-        trips.push({
-          id: String(row[0]).trim(),
-          name: String(row[3]).trim(),
-          direction: String(row[4]).trim(),
-          start: String(row[5]).trim(),
-          destination: String(row[6]).trim(),
-          departure: row[7] instanceof Date
-            ? Utilities.formatDate(row[7], timezone, 'HH:mm')
-            : String(row[7] || ''),
-          arrival: row[8] instanceof Date
-            ? Utilities.formatDate(row[8], timezone, 'HH:mm')
-            : String(row[8] || ''),
-          type: 'regular'
-        });
+        continue;
       }
+
+      const tripId = String(row[0]).trim();
+      const assignment = findAssignment(tripId);
+
+      // ใช้ข้อมูลรถและคนขับจากการมอบหมายก่อน
+      // หากไม่มีข้อมูล ให้ใช้ค่าตั้งต้นจากรอบประจำ
+      const vehicleId = assignment &&
+        String(assignment[4]).trim()
+          ? String(assignment[4]).trim()
+          : String(row[9] || '').trim();
+
+      const driverName = assignment &&
+        String(assignment[5]).trim()
+          ? String(assignment[5]).trim()
+          : String(row[10] || '').trim();
+
+      trips.push({
+        id: tripId,
+        name: String(row[3]).trim(),
+        direction: String(row[4]).trim(),
+        start: String(row[5]).trim(),
+        destination: String(row[6]).trim(),
+        departure: assignment &&
+  assignment[6] !== '' &&
+  assignment[6] !== null
+    ? formatTime(assignment[6])
+    : formatTime(row[7]),
+
+arrival: assignment &&
+  assignment[7] !== '' &&
+  assignment[7] !== null
+    ? formatTime(assignment[7])
+    : formatTime(row[8]),
+        vehicleId: vehicleId,
+        driverName: driverName,
+        type: 'regular'
+      });
     }
 
-    // รอบพิเศษ
-    const specialSheet = ss.getSheetByName('รอบพิเศษ');
+    // 7. โหลดรอบพิเศษ
+    const specialSheet =
+      ss.getSheetByName('รอบพิเศษ');
 
     if (!specialSheet) {
       throw new Error('ไม่พบชีตรอบพิเศษ');
     }
 
-    const specialData = specialSheet.getDataRange().getValues();
+    const specialData =
+      specialSheet.getDataRange().getValues();
 
     for (let i = 1; i < specialData.length; i++) {
       const row = specialData[i];
 
-      let savedDate = '';
-
-      if (row[1] instanceof Date) {
-        savedDate = Utilities.formatDate(
-          row[1], timezone, 'yyyy-MM-dd'
-        );
-      } else if (row[1]) {
-        savedDate = String(row[1]).trim();
-      }
-
       if (
-        savedDate === dateString &&
-        String(row[10]).trim() === 'เปิดใช้งาน'
+        formatDate(row[1]) !== dateString ||
+        String(row[10]).trim() !== 'เปิดใช้งาน'
       ) {
-        trips.push({
-          id: String(row[0]).trim(),
-          name: String(row[2]).trim(),
-          direction: String(row[3]).trim(),
-          start: String(row[4]).trim(),
-          destination: String(row[5]).trim(),
-          departure: row[6] instanceof Date
-            ? Utilities.formatDate(row[6], timezone, 'HH:mm')
-            : String(row[6] || ''),
-          arrival: row[7] instanceof Date
-            ? Utilities.formatDate(row[7], timezone, 'HH:mm')
-            : String(row[7] || ''),
-          type: 'special'
-        });
+        continue;
       }
+
+      const tripId = String(row[0]).trim();
+      const assignment = findAssignment(tripId);
+
+      // ใช้ข้อมูลรถและคนขับจากการมอบหมายก่อน
+      // หากไม่มีข้อมูล ให้ใช้ค่าตั้งต้นจากรอบพิเศษ
+      const vehicleId = assignment &&
+        String(assignment[4]).trim()
+          ? String(assignment[4]).trim()
+          : String(row[8] || '').trim();
+
+      const driverName = assignment &&
+        String(assignment[5]).trim()
+          ? String(assignment[5]).trim()
+          : String(row[9] || '').trim();
+
+      trips.push({
+        id: tripId,
+        name: String(row[2]).trim(),
+        direction: String(row[3]).trim(),
+        start: String(row[4]).trim(),
+        destination: String(row[5]).trim(),
+        departure: assignment &&
+  assignment[6] !== '' &&
+  assignment[6] !== null
+    ? formatTime(assignment[6])
+    : formatTime(row[6]),
+
+arrival: assignment &&
+  assignment[7] !== '' &&
+  assignment[7] !== null
+    ? formatTime(assignment[7])
+    : formatTime(row[7]),
+        vehicleId: vehicleId,
+        driverName: driverName,
+        type: 'special'
+      });
     }
 
-    // ป้องกันรหัสรอบซ้ำ
+    // 8. ป้องกันรหัสรอบซ้ำ
     const ids = trips.map(trip => trip.id);
 
     if (new Set(ids).size !== ids.length) {
-      throw new Error('พบรหัสรอบซ้ำ กรุณาตรวจสอบชีตรอบเดินรถและรอบพิเศษ');
+      throw new Error(
+        'พบรหัสรอบซ้ำ กรุณาตรวจสอบชีตรอบเดินรถและรอบพิเศษ'
+      );
     }
 
+    // 9. ส่งข้อมูลกลับไปยังหน้าเว็บ
     return {
       success: true,
       trips: trips
@@ -963,6 +1114,7 @@ function getAvailableTrips(dateString) {
     };
   }
 }
+
 // ตรวจสอบรอบที่ยังไม่ได้กำหนดรถหรือคนขับ
 function getUnassignedTripWarnings(token) {
   try {
@@ -3120,30 +3272,10 @@ function cancelDriverAssignment(token, assignmentId) {
       throw new Error('รายการนี้ไม่ได้อยู่ในสถานะเปิดใช้งาน');
     }
 
-    const timezone = 'Asia/Vientiane';
+    
+    // อนุญาตให้คนขับยกเลิกรอบได้ แม้เลยเวลาออกเดินทางแล้ว
+    // ยังคงตรวจสอบสิทธิ์คนขับและสถานะรอบก่อนยกเลิก
 
-    let dateText = '';
-
-    if (row[1] instanceof Date) {
-      dateText = Utilities.formatDate(
-        row[1], timezone, 'yyyy-MM-dd'
-      );
-    } else {
-      dateText = String(row[1] || '').trim();
-    }
-
-    const departure = String(row[6] || '').trim();
-
-    const departureDateTime = new Date(
-      dateText + 'T' + departure + ':00+07:00'
-    );
-
-    if (
-      isNaN(departureDateTime.getTime()) ||
-      new Date().getTime() >= departureDateTime.getTime()
-    ) {
-      throw new Error('เลยเวลาออกเดินทางแล้ว ไม่สามารถยกเลิกได้');
-    }
 
     // เปลี่ยนสถานะเป็นยกเลิก โดยไม่ลบข้อมูล
     sheet.getRange(index + 2, 9).setValue('ยกเลิก');

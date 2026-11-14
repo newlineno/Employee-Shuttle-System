@@ -743,6 +743,11 @@ function renderMyAssignments(assignments) {
   const container = document.getElementById("myAssignmentList");
   container.innerHTML = "";
 
+  // แสดงเฉพาะรอบที่ยังเปิดใช้งาน
+  assignments = (assignments || []).filter(function(item) {
+    return String(item.status || "").trim() === "เปิดใช้งาน";
+  });
+
   if (!assignments.length) {
     container.textContent = "ยังไม่มีรอบรถที่คุณรับผิดชอบ";
     return;

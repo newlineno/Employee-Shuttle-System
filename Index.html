@@ -508,11 +508,12 @@ function loadTripPassengers(travelDate, tripId) {
       tripInfo.innerHTML = '';
 
       const details = [
-        'รอบรถ: ' + trip.name,
-        'เส้นทาง: ' + trip.start + ' → ' + trip.destination,
-        'เวลาออก: ' + trip.departure,
-        'เวลาถึง: ' + trip.arrival
-      ];
+  'รอบรถ: ' + trip.name,
+  'เส้นทาง: ' + trip.start + ' → ' + trip.destination,
+  'เวลาออก: ' + trip.departure,
+  'เวลาถึง: ' + trip.arrival,
+  'คนขับ: ' + (trip.driverName || 'ยังไม่ได้กำหนดคนขับ')
+];
 
       details.forEach(function(line) {
         const div = document.createElement('div');
@@ -567,6 +568,7 @@ function loadTripPassengers(travelDate, tripId) {
               'รหัสการจอง: ' + result.bookingId + '\n' +
               'ชื่อ: ' + result.fullName + '\n' +
               'รอบรถ: ' + result.tripName + '\n' +
+              'คนขับ: ' + (result.driverName || 'ยังไม่ได้กำหนดคนขับ') + '\n' +
               'วันที่: ' + result.travelDate + '\n' +
               'จำนวนผู้โดยสาร: ' + result.passengerCount + '\n' +
               'จุดขึ้น: ' + result.pickup + '\n' +
