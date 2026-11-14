@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      color: #263238;
+    }
+
+    .header {
+      background: #17365d;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 25px auto;
+      padding: 0 16px;
+    }
+
+    .welcome {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+    }
+
+    .menu-item {
+      background: white;
+      padding: 24px;
+      border-radius: 10px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .menu-item h3 {
+      margin-top: 0;
+      color: #17365d;
+    }
+
+    .menu-item p {
+      color: #667085;
+      font-size: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 16px;
+      cursor: pointer;
+      background: #17365d;
+      color: white;
+    }
+
+    .logout {
+      background: #c62828;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="header">
+    <h2>ระบบจัดการรถตู้บริษัท</h2>
+    <button class="logout" onclick="logout()">ออกจากระบบ</button>
+  </header>
+
+  <main class="container">
+
+    <section class="welcome">
+      <h2>ยินดีต้อนรับผู้ดูแลระบบ</h2>
+      <p id="adminName">กำลังตรวจสอบบัญชี...</p>
+    </section>
+
+    <section class="welcome" id="warningSection">
+  <h2>การแจ้งเตือนการมอบหมายรถ</h2>
+
+  <p id="warningSummary">
+    กำลังตรวจสอบข้อมูลรอบเดินรถ...
+  </p>
+
+  <div id="warningList"></div>
+
+  <button onclick="loadAssignmentWarnings()">
+    รีเฟรชการแจ้งเตือน
+  </button>
+</section>
+<section class="welcome" id="capacityAlertSection">
+  <h2>การแจ้งเตือนผู้โดยสารเกินความจุรถ</h2>
+
+  <p id="capacityAlertSummary">
+    กำลังโหลดข้อมูล...
+  </p>
+
+  <div id="capacityAlertList"></div>
+
+  <button onclick="loadCapacityAlerts()">
+    รีเฟรชการแจ้งเตือน
+  </button>
+</section>
+
+<section class="welcome" id="driverManagementSection">
+  <h2>จัดการบัญชีคนขับ</h2>
+  <p>สร้างบัญชีสำหรับคนขับเพื่อเข้าสู่ระบบดูรอบเดินรถของบริษัท</p>
+
+  <form id="driverForm">
+    <div style="margin-bottom:12px;">
+      <label>ชื่อผู้ใช้</label><br>
+      <input
+        type="text"
+        id="driverUsername"
+        minlength="4"
+        maxlength="30"
+        pattern="[A-Za-z0-9_]+"
+        required
+        placeholder="ภาษาอังกฤษหรือตัวเลข"
+        style="width:100%;padding:10px;margin-top:5px;"
+      >
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label>รหัสผ่าน</label><br>
+      <input
+        type="password"
+        id="driverPassword"
+        minlength="12"
+        maxlength="128"
+        required
+        placeholder="อย่างน้อย 12 ตัวอักษร"
+        style="width:100%;padding:10px;margin-top:5px;"
+      >
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label>ชื่อคนขับ</label><br>
+      <input
+        type="text"
+        id="driverName"
+        maxlength="100"
+        required
+        placeholder="ชื่อ-นามสกุลคนขับ"
+        style="width:100%;padding:10px;margin-top:5px;"
+      >
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label>รถที่รับผิดชอบ</label><br>
+      <select
+        id="driverVehicle"
+        required
+        style="width:100%;padding:10px;margin-top:5px;"
+      >
+        <option value="">กำลังโหลดข้อมูลรถ...</option>
+      </select>
+    </div>
+
+    <button type="submit" id="createDriverButton">
+      สร้างบัญชีคนขับ
+    </button>
+
+    <p id="driverFormMessage"></p>
+  </form>
+
+  <hr style="margin:25px 0;">
+
+  <h3>รายชื่อบัญชีคนขับ</h3>
+  <button type="button" onclick="loadDriverManagementData()">
+    รีเฟรชรายชื่อ
+  </button>
+
+  <div id="driverAccountList" style="margin-top:15px;">
+    กำลังโหลดข้อมูล...
+  </div>
+</section>
+
+<!-- ===================================== -->
+<!-- จัดการข้อมูลรถ -->
+<!-- ===================================== -->
+
+<section class="welcome" id="vehicleManagementSection">
+
+  <h2>จัดการข้อมูลรถ</h2>
+  <p>เพิ่มและตรวจสอบข้อมูลรถตู้ของบริษัท</p>
+
+  <form id="vehicleForm">
+
+    <div style="margin-bottom:12px;">
+      <label>รหัสรถ</label><br>
+      <input
+        type="text"
+        id="vehicleId"
+        required
+        maxlength="20"
+        placeholder="ตัวอย่าง V001"
+        style="width:100%;padding:10px;margin-top:5px;"
+      >
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label>ทะเบียนรถ</label><br>
+      <input
+        type="text"
+        id="vehiclePlate"
+        required
+        maxlength="30"
+        placeholder="กรอกทะเบียนรถ"
+        style="width:100%;padding:10px;margin-top:5px;"
+      >
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label>ชื่อคนขับ</label><br>
+      <input
+        type="text"
+        id="vehicleDriverName"
+        required
+        maxlength="100"
+        placeholder="ชื่อ-นามสกุลคนขับ"
+        style="width:100%;padding:10px;margin-top:5px;"
+      >
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label>จำนวนที่นั่ง</label><br>
+      <input
+        type="number"
+        id="vehicleSeats"
+        required
+        min="1"
+        step="1"
+        placeholder="ตัวอย่าง 12"
+        style="width:100%;padding:10px;margin-top:5px;"
+      >
+    </div>
+
+    <button type="submit" id="saveVehicleButton">
+      เพิ่มข้อมูลรถ
+    </button>
+
+    <p id="vehicleFormMessage"></p>
+
+  </form>
+
+  <hr style="margin:25px 0;">
+
+  <h3>รายการรถในระบบ</h3>
+
+  <button
+    type="button"
+    onclick="loadVehicleManagementData()"
+  >
+    รีเฟรชรายการรถ
+  </button>
+
+  <div
+    id="vehicleList"
+    style="margin-top:15px;"
+  >
+    กำลังโหลดข้อมูล...
+  </div>
+
+</section>
+
+    <section class="menu">
+
+      <div class="menu-item">
+        <h3>ข้อมูลการจอง</h3>
+        <p>ตรวจสอบรายการจองรถของพนักงาน</p>
+        <button disabled>เร็ว ๆ นี้</button>
+      </div>
+
+      <div class="menu-item">
+        <h3>รายชื่อพนักงาน</h3>
+        <p>จัดการข้อมูลพนักงานในระบบ</p>
+        <button disabled>เร็ว ๆ นี้</button>
+      </div>
+
+      <div class="menu-item">
+        <h3>ข้อมูลรถ</h3>
+        <p>จัดการรถตู้และข้อมูลคนขับ</p>
+        <button disabled>เร็ว ๆ นี้</button>
+      </div>
+
+      <div class="menu-item">
+        <h3>จุดขึ้น-ลง</h3>
+        <p>จัดการสถานที่รับและส่งพนักงาน</p>
+        <button disabled>เร็ว ๆ นี้</button>
+      </div>
+
+      <div class="menu-item">
+        <h3>รอบเดินรถ</h3>
+        <p>จัดการวัน เวลา และเส้นทางเดินรถ</p>
+        <button disabled>เร็ว ๆ นี้</button>
+      </div>
+
+<div class="menu-item">
+  <h3>หน้าคนขับ</h3>
+  <p>เข้าสู่ระบบเพื่อดูรอบรถและรายชื่อผู้โดยสารทั้งหมดของบริษัท</p>
+  <button onclick="openDriverPage()">
+    เข้าสู่หน้าคนขับ
+  </button>
+</div>
+
+    </section>
+  </main>
+
+  <script>
+    const token = sessionStorage.getItem('adminToken');
+
+    function checkLogin() {
+  if (!token) {
+    window.top.location.href = '?page=adminLogin';
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (!result || !result.success) {
+        sessionStorage.removeItem('adminToken');
+        window.top.location.href = '?page=adminLogin';
+        return;
+      }
+
+      document.getElementById('adminName').textContent =
+  'ผู้ดูแล: ' + result.adminName;
+
+loadAssignmentWarnings();
+loadCapacityAlerts();
+loadDriverManagementData();
+loadVehicleManagementData();
+    })
+    .withFailureHandler(function() {
+      sessionStorage.removeItem('adminToken');
+      window.top.location.href = '?page=adminLogin';
+    })
+    .checkAdminSession(token);
+}
+function loadAssignmentWarnings() {
+  const summary = document.getElementById('warningSummary');
+  const list = document.getElementById('warningList');
+
+  summary.textContent = 'กำลังตรวจสอบข้อมูล...';
+  list.innerHTML = '';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (!result || !result.success) {
+        summary.textContent =
+          result ? result.message : 'ไม่สามารถตรวจสอบข้อมูลได้';
+        return;
+      }
+
+      if (result.count === 0) {
+        summary.textContent =
+          'ไม่มีรอบที่ขาดการกำหนดรถหรือคนขับ';
+        return;
+      }
+
+      summary.textContent =
+        'พบรอบที่ต้องตรวจสอบ ' + result.count + ' รายการ';
+
+      result.warnings.forEach(function(item) {
+        const card = document.createElement('div');
+
+        card.style.padding = '12px';
+        card.style.marginTop = '10px';
+        card.style.border = '1px solid #f0c36d';
+        card.style.borderRadius = '6px';
+        card.style.background = '#fff8e1';
+
+        const title = document.createElement('strong');
+        title.textContent = item.tripName;
+
+        const date = document.createElement('p');
+        date.textContent = 'วันที่เดินทาง: ' + item.date;
+
+        const message = document.createElement('p');
+        message.textContent = 'คำเตือน: ' + item.message;
+
+        card.appendChild(title);
+        card.appendChild(date);
+        card.appendChild(message);
+
+        list.appendChild(card);
+      });
+    })
+    .withFailureHandler(function(error) {
+      summary.textContent =
+        'เกิดข้อผิดพลาด: ' + error.message;
+    })
+    .getUnassignedTripWarnings(token);
+}
+    function loadCapacityAlerts() {
+  const summary = document.getElementById('capacityAlertSummary');
+  const list = document.getElementById('capacityAlertList');
+
+  summary.textContent = 'กำลังโหลดข้อมูล...';
+  list.innerHTML = '';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (!result || !result.success) {
+        summary.textContent =
+          result ? result.message : 'ไม่สามารถโหลดข้อมูลได้';
+        return;
+      }
+
+      if (result.count === 0) {
+        summary.textContent = 'ไม่มีรายการแจ้งเตือน';
+        return;
+      }
+
+      summary.textContent =
+        'พบรายการแจ้งเตือน ' + result.count + ' รายการ';
+
+      result.alerts.forEach(function(item) {
+        const card = document.createElement('div');
+
+        card.style.padding = '12px';
+        card.style.marginTop = '10px';
+        card.style.border = '1px solid #e57373';
+        card.style.borderRadius = '6px';
+        card.style.background = '#ffebee';
+
+        const title = document.createElement('strong');
+        title.textContent = item.tripName;
+
+        const date = document.createElement('p');
+        date.textContent = 'วันที่เดินทาง: ' + item.date;
+
+        const detail = document.createElement('p');
+        detail.textContent = item.detail;
+
+        const status = document.createElement('p');
+        status.textContent = 'สถานะ: ' + item.status;
+
+        card.appendChild(title);
+        card.appendChild(date);
+        card.appendChild(detail);
+        card.appendChild(status);
+
+        list.appendChild(card);
+      });
+    })
+    .withFailureHandler(function(error) {
+      summary.textContent =
+        'เกิดข้อผิดพลาด: ' + error.message;
+    })
+    .getAdminAlerts(token);
+}
+
+// ==========================================
+// จัดการบัญชีคนขับ
+// ==========================================
+
+function loadDriverManagementData() {
+  const list = document.getElementById('driverAccountList');
+  const vehicleSelect = document.getElementById('driverVehicle');
+
+  list.textContent = 'กำลังโหลดข้อมูล...';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (!result || !result.success) {
+        list.textContent = result
+          ? result.message
+          : 'ไม่สามารถโหลดข้อมูลได้';
+        return;
+      }
+
+      vehicleSelect.innerHTML = '';
+
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = 'เลือกทะเบียนรถ';
+      vehicleSelect.appendChild(defaultOption);
+
+      result.vehicles.forEach(function(vehicle) {
+        const option = document.createElement('option');
+        option.value = vehicle.vehicleId;
+        option.textContent =
+          vehicle.plate + ' (' + vehicle.vehicleId + ')';
+        vehicleSelect.appendChild(option);
+      });
+
+      list.innerHTML = '';
+
+      if (result.accounts.length === 0) {
+        list.textContent = 'ยังไม่มีบัญชีคนขับ';
+        return;
+      }
+
+      result.accounts.forEach(function(account) {
+        const card = document.createElement('div');
+
+        card.style.padding = '12px';
+        card.style.marginTop = '10px';
+        card.style.border = '1px solid #ddd';
+        card.style.borderRadius = '8px';
+        card.style.background = '#fafafa';
+
+        const name = document.createElement('strong');
+        name.textContent = account.driverName;
+
+        const username = document.createElement('p');
+        username.textContent = 'ชื่อผู้ใช้: ' + account.username;
+
+        const vehicle = document.createElement('p');
+        vehicle.textContent = 'รหัสรถ: ' + account.vehicleId;
+
+        const status = document.createElement('p');
+        status.textContent = 'สถานะ: ' + account.status;
+
+        card.appendChild(name);
+        card.appendChild(username);
+        card.appendChild(vehicle);
+        card.appendChild(status);
+
+        list.appendChild(card);
+      });
+    })
+    .withFailureHandler(function(error) {
+      list.textContent = 'เกิดข้อผิดพลาด: ' + error.message;
+    })
+    .getDriverManagementData(token);
+}
+
+
+// ==========================================
+// จัดการข้อมูลรถ
+// ==========================================
+
+// โหลดรายการรถ
+function loadVehicleManagementData() {
+  const list = document.getElementById('vehicleList');
+
+  list.textContent = 'กำลังโหลดข้อมูลรถ...';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+
+      if (!result || !result.success) {
+        list.textContent = result
+          ? result.message
+          : 'ไม่สามารถโหลดข้อมูลรถได้';
+        return;
+      }
+
+      list.innerHTML = '';
+
+      if (result.vehicles.length === 0) {
+        list.textContent = 'ยังไม่มีข้อมูลรถในระบบ';
+        return;
+      }
+
+      result.vehicles.forEach(function(vehicle) {
+
+        const card = document.createElement('div');
+
+        card.style.padding = '14px';
+        card.style.marginTop = '10px';
+        card.style.border = '1px solid #ddd';
+        card.style.borderRadius = '8px';
+        card.style.background = '#fafafa';
+
+        const title = document.createElement('strong');
+        title.textContent =
+          vehicle.plate + ' (' + vehicle.vehicleId + ')';
+
+        const driver = document.createElement('p');
+        driver.textContent =
+          'ชื่อคนขับ: ' + vehicle.driverName;
+
+        const seats = document.createElement('p');
+        seats.textContent =
+          'จำนวนที่นั่ง: ' + vehicle.seats;
+
+        const status = document.createElement('p');
+        status.textContent =
+          'สถานะ: ' + vehicle.status;
+
+        card.appendChild(title);
+        card.appendChild(driver);
+        card.appendChild(seats);
+        card.appendChild(status);
+
+        list.appendChild(card);
+      });
+
+      // อัปเดตรายการรถในช่องเลือกของบัญชีคนขับ
+      loadDriverManagementData();
+
+    })
+    .withFailureHandler(function(error) {
+      list.textContent =
+        'เกิดข้อผิดพลาด: ' + error.message;
+    })
+    .getVehicleManagementData(token);
+}
+
+
+// บันทึกข้อมูลรถใหม่
+document.getElementById('vehicleForm')
+  .addEventListener('submit', function(event) {
+
+    event.preventDefault();
+
+    const button =
+      document.getElementById('saveVehicleButton');
+
+    const message =
+      document.getElementById('vehicleFormMessage');
+
+    const data = {
+      vehicleId:
+        document.getElementById('vehicleId').value.trim(),
+
+      plate:
+        document.getElementById('vehiclePlate').value.trim(),
+
+      driverName:
+        document.getElementById('vehicleDriverName').value.trim(),
+
+      seats:
+        document.getElementById('vehicleSeats').value
+    };
+
+    button.disabled = true;
+    message.textContent = 'กำลังบันทึกข้อมูลรถ...';
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+
+        button.disabled = false;
+
+        if (!result || !result.success) {
+          message.textContent = result
+            ? result.message
+            : 'ไม่สามารถบันทึกข้อมูลรถได้';
+          return;
+        }
+
+        message.textContent = result.message;
+
+        document.getElementById('vehicleForm').reset();
+
+        loadVehicleManagementData();
+
+      })
+      .withFailureHandler(function(error) {
+
+        button.disabled = false;
+
+        message.textContent =
+          'เกิดข้อผิดพลาด: ' + error.message;
+
+      })
+      .createVehicle(token, data);
+
+  });
+
+// สร้างบัญชีคนขับ
+document.getElementById('driverForm')
+  .addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const button = document.getElementById('createDriverButton');
+    const message = document.getElementById('driverFormMessage');
+
+    const data = {
+      username: document.getElementById('driverUsername').value.trim(),
+      password: document.getElementById('driverPassword').value,
+      driverName: document.getElementById('driverName').value.trim(),
+      vehicleId: document.getElementById('driverVehicle').value
+    };
+
+    if (!data.vehicleId) {
+      message.textContent = 'กรุณาเลือกรถที่รับผิดชอบ';
+      return;
+    }
+
+    button.disabled = true;
+    message.textContent = 'กำลังสร้างบัญชี...';
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        button.disabled = false;
+
+        if (!result || !result.success) {
+          message.textContent = result
+            ? result.message
+            : 'ไม่สามารถสร้างบัญชีได้';
+          return;
+        }
+
+        message.textContent = result.message;
+        document.getElementById('driverForm').reset();
+
+        loadDriverManagementData();
+      })
+      .withFailureHandler(function(error) {
+        button.disabled = false;
+        message.textContent = 'เกิดข้อผิดพลาด: ' + error.message;
+      })
+      .createDriverAccount(token, data);
+  });
+  
+function openDriverPage() {
+  google.script.run
+    .withSuccessHandler(function(webAppUrl) {
+      window.open(webAppUrl + '?page=driver', '_blank');
+    })
+    .withFailureHandler(function(error) {
+      alert('ไม่สามารถเปิดหน้าคนขับได้: ' + error.message);
+    })
+    .getWebAppUrl();
+}
+
+
+    function logout() {
+  if (!token) {
+    sessionStorage.removeItem('adminToken');
+    window.top.location.href = '?page=adminLogin';
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function() {
+      sessionStorage.removeItem('adminToken');
+      window.top.location.href = '?page=adminLogin';
+    })
+    .withFailureHandler(function() {
+      sessionStorage.removeItem('adminToken');
+      window.top.location.href = '?page=adminLogin';
+    })
+    .logoutAdmin(token);
+}
+    checkLogin();
+  </script>
+
+</body>
+</html>

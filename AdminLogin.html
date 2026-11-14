@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      font-family: Arial, sans-serif;
+      background: #f3f6f4;
+      color: #26352c;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 45px auto;
+      padding: 28px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 3px 16px rgba(0,0,0,.07);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #68756c;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      margin: 17px 0 7px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccd5ce;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 8px;
+      background: #16834a;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .6;
+    }
+
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #16834a;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    #message {
+      display: none;
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .error {
+      display: block !important;
+      background: #fdeaea;
+      color: #a32121;
+    }
+    .success {
+  display: block !important;
+  background: #e5f5eb;
+  color: #176b38;
+}
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <h2>เข้าสู่ระบบผู้ดูแล</h2>
+
+    <p class="subtitle">
+      Employee Shuttle Management
+    </p>
+
+    <form id="loginForm">
+
+      <label>ชื่อผู้ใช้</label>
+      <input
+        type="text"
+        id="username"
+        autocomplete="username"
+        required
+      >
+
+      <label>รหัสผ่าน</label>
+      <input
+        type="password"
+        id="password"
+        autocomplete="current-password"
+        required
+      >
+
+      <button type="submit" id="loginBtn">
+        เข้าสู่ระบบ
+      </button>
+
+    </form>
+
+    <div id="message" role="alert"></div>
+    <a
+  id="dashboardLink"
+  href="#"
+  target="_top"
+  style="
+    display:none;
+    margin-top:15px;
+    padding:14px;
+    background:#16834a;
+    color:white;
+    text-align:center;
+    text-decoration:none;
+    border-radius:8px;
+    font-weight:bold;
+  "
+>
+  เข้าสู่หน้าจัดการระบบ
+</a>
+
+    <a class="back" href="?">
+      กลับหน้าจองรถ
+    </a>
+
+  </div>
+
+  <script>
+  const form = document.getElementById('loginForm');
+  const button = document.getElementById('loginBtn');
+  const message = document.getElementById('message');
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    button.disabled = true;
+    button.textContent = 'กำลังตรวจสอบ...';
+    message.style.display = 'none';
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+
+  if (result && result.success) {
+
+    sessionStorage.setItem('adminToken', result.token);
+
+    button.disabled = true;
+    button.textContent = 'เข้าสู่ระบบสำเร็จ';
+
+    message.textContent =
+      'ยืนยันตัวตนสำเร็จ กรุณากดปุ่มเพื่อเข้าสู่ระบบจัดการ';
+
+    message.className = 'success';
+
+    google.script.run
+      .withSuccessHandler(function(webAppUrl) {
+
+        const link = document.getElementById('dashboardLink');
+
+        link.href = webAppUrl + '?page=adminDashboard';
+        link.style.display = 'block';
+
+      })
+      .withFailureHandler(function(error) {
+
+        message.textContent =
+          'ไม่สามารถสร้างลิงก์ Dashboard ได้: ' + error.message;
+
+        message.className = 'error';
+
+      })
+      .getWebAppUrl();
+
+  } else {
+
+    button.disabled = false;
+    button.textContent = 'เข้าสู่ระบบ';
+
+    message.textContent =
+      result && result.message
+        ? result.message
+        : 'เข้าสู่ระบบไม่สำเร็จ';
+
+    message.className = 'error';
+
+  }
+
+})
+      .withFailureHandler(function(error) {
+        button.disabled = false;
+        button.textContent = 'เข้าสู่ระบบ';
+
+        message.textContent = error.message || 'เกิดข้อผิดพลาด';
+        message.className = 'error';
+        message.style.display = 'block';
+      })
+      .loginAdmin({ username: username, password: password });
+  });
+</script>
+
+</body>
+</html>

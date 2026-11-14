@@ -1,0 +1,640 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f3f6f9;
+      color: #263445;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 20px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .header h2 {
+      margin-bottom: 8px;
+      color: #176b45;
+    }
+
+    .header p {
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin: 22px 0 14px;
+      color: #176b45;
+      border-bottom: 1px solid #e5e9ef;
+      padding-bottom: 9px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 7px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d5dce5;
+      border-radius: 8px;
+      font-size: 15px;
+      margin-bottom: 16px;
+      background: white;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #238653;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 75px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #176b45;
+      color: white;
+      border: none;
+      border-radius: 9px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover { background: #105637; }
+
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #7b8794;
+      text-align: center;
+      margin-top: 18px;
+    }
+
+    .trip-info {
+      display: none;
+      background: #eef8f1;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .message {
+      display: none;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .error {
+      display: block;
+      background: #fff0f0;
+      color: #b42318;
+    }
+
+    .warning {
+      display: block;
+      background: #fff7e6;
+      color: #925d00;
+    }
+
+    .success {
+      display: block;
+      background: #eef8f1;
+      color: #176b45;
+    }
+
+    /* ปุ่มเข้าสู่ระบบผู้ดูแลและคนขับ */
+.login-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0 22px;
+}
+
+.login-buttons button {
+  flex: 1;
+  width: auto;
+  margin-top: 0;
+  padding: 12px 8px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.admin-login {
+  background: #2457a6;
+}
+
+.driver-login {
+  background: #16734a;
+}
+
+@media (max-width: 480px) {
+  .login-buttons {
+    flex-direction: column;
+  }
+}
+
+
+.passenger-list {
+  display: none;
+  margin: 16px 0 20px;
+  padding: 15px;
+  background: #f7faf8;
+  border: 1px solid #dce9e1;
+  border-radius: 10px;
+}
+
+.passenger-heading {
+  font-weight: bold;
+  color: #176b45;
+  margin-bottom: 8px;
+}
+
+.passenger-summary {
+  font-size: 13px;
+  color: #526357;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.passenger-card {
+  background: #fff;
+  border: 1px solid #e2e8e4;
+  border-radius: 8px;
+  padding: 11px;
+  margin-top: 9px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.passenger-name {
+  font-weight: bold;
+  color: #263445;
+  font-size: 14px;
+}
+
+.passenger-type {
+  color: #718096;
+  font-size: 12px;
+}
+
+.passenger-total {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #dce9e1;
+  color: #176b45;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="header">
+  <h2>EMPLOYEE SHUTTLE</h2>
+  <p>ระบบจองรถรับ-ส่งพนักงาน</p>
+</div>
+
+<div class="login-buttons">
+
+  <button type="button"
+          class="admin-login"
+          onclick="openLoginPage('adminLogin')">
+    เข้าสู่ระบบผู้ดูแล
+  </button>
+
+  <button type="button"
+          class="driver-login"
+          onclick="openLoginPage('driver')">
+    เข้าสู่ระบบคนขับ
+  </button>
+
+</div>
+
+    <form id="bookingForm">
+
+      <div class="section-title">1. ข้อมูลผู้จอง</div>
+
+      <label>ประเภทผู้จอง</label>
+      <select id="bookingType" required>
+        <option value="">-- เลือกประเภทผู้จอง --</option>
+        <option value="พนักงาน">พนักงาน</option>
+        <option value="บุคคลภายนอก">บุคคลภายนอก</option>
+      </select>
+
+      <label>ชื่อ-นามสกุล</label>
+      <input type="text" id="fullName"
+        placeholder="กรอกชื่อและนามสกุล" maxlength="150" required>
+
+      <label>เบอร์โทรศัพท์</label>
+      <input type="tel" id="phone"
+        placeholder="กรอกเบอร์โทรศัพท์" maxlength="30" required>
+
+      <label>จำนวนผู้โดยสาร</label>
+      <input type="number" id="passengerCount"
+        min="1" max="100" value="1" required>
+
+      <div class="section-title">2. ข้อมูลการเดินทาง</div>
+
+      <label>วันที่เดินทาง</label>
+      <input type="date" id="travelDate" required>
+
+      <label>รอบรถ</label>
+      <select id="trip" required disabled>
+        <option value="">-- กรุณาเลือกวันที่ก่อน --</option>
+      </select>
+
+      <div id="tripInfo" class="trip-info"></div>
+
+<div id="passengerList" class="passenger-list">
+  <div class="passenger-heading">ผู้ร่วมเดินทางในรอบนี้</div>
+  <div id="passengerSummary" class="passenger-summary">
+    กรุณาเลือกวันที่และรอบรถเพื่อดูรายชื่อ
+  </div>
+  <div id="passengerItems"></div>
+</div>
+
+
+      <label>จุดขึ้นรถ</label>
+      <input type="text" id="pickup"
+        placeholder="กรอกสถานที่ขึ้นรถ" required>
+
+      <label>จุดลงรถ</label>
+      <input type="text" id="dropoff"
+        placeholder="กรอกสถานที่ลงรถ" required>
+
+      <label>หมายเหตุเพิ่มเติม (ถ้ามี)</label>
+      <textarea id="note"
+        placeholder="กรอกหมายเหตุเพิ่มเติม"></textarea>
+
+      <div id="message" class="message"></div>
+
+      <button type="submit" id="submitButton">
+        ยืนยันการจอง
+      </button>
+
+    </form>
+
+    <div class="note">
+      Employee Shuttle Reservation System
+    </div>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('bookingForm');
+    const dateInput = document.getElementById('travelDate');
+    const tripSelect = document.getElementById('trip');
+    const tripInfo = document.getElementById('tripInfo');
+    const message = document.getElementById('message');
+    const submitButton = document.getElementById('submitButton');
+
+    let availableTrips = [];
+
+const passengerList = document.getElementById('passengerList');
+const passengerSummary = document.getElementById('passengerSummary');
+const passengerItems = document.getElementById('passengerItems');
+
+// โหลดรายชื่อผู้จองในรอบที่เลือก
+function loadTripPassengers(travelDate, tripId) {
+  passengerList.style.display = 'block';
+  passengerSummary.textContent = 'กำลังโหลดรายชื่อผู้ร่วมเดินทาง...';
+  passengerItems.innerHTML = '';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (!result || !result.success) {
+        passengerSummary.textContent =
+          result ? result.message : 'ไม่สามารถโหลดรายชื่อได้';
+        return;
+      }
+
+      passengerItems.innerHTML = '';
+
+      if (result.passengers.length === 0) {
+        passengerSummary.textContent =
+          'ยังไม่มีผู้จองในรอบนี้';
+        return;
+      }
+
+      passengerSummary.textContent =
+        'มีรายการจองทั้งหมด ' + result.bookingCount + ' รายการ';
+
+      result.passengers.forEach(function(person, index) {
+        const card = document.createElement('div');
+        card.className = 'passenger-card';
+
+        const name = document.createElement('div');
+        name.className = 'passenger-name';
+        name.textContent = (index + 1) + '. ' + person.fullName;
+
+        const type = document.createElement('div');
+        type.className = 'passenger-type';
+        type.textContent = person.bookingType;
+
+        const pickup = document.createElement('div');
+        pickup.textContent = 'จุดขึ้นรถ: ' + person.pickup;
+
+        const dropoff = document.createElement('div');
+        dropoff.textContent = 'จุดลงรถ: ' + person.dropoff;
+
+        const count = document.createElement('div');
+        count.textContent =
+          'จำนวนผู้โดยสาร: ' + person.passengerCount + ' คน';
+
+        card.appendChild(name);
+        card.appendChild(type);
+        card.appendChild(pickup);
+        card.appendChild(dropoff);
+        card.appendChild(count);
+
+        passengerItems.appendChild(card);
+      });
+
+      const total = document.createElement('div');
+      total.className = 'passenger-total';
+      total.textContent =
+        'รวมผู้โดยสารทั้งหมด ' + result.totalPassengers + ' คน';
+
+      passengerItems.appendChild(total);
+    })
+    .withFailureHandler(function(error) {
+      passengerSummary.textContent =
+        'เกิดข้อผิดพลาด: ' + error.message;
+    })
+    .getTripPassengers(travelDate, tripId);
+}
+
+
+    // กำหนดวันที่ปัจจุบันเป็นวันแรกที่เลือกได้
+    const today = new Date();
+    const localToday = [
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, '0'),
+      String(today.getDate()).padStart(2, '0')
+    ].join('-');
+
+    dateInput.min = localToday;
+
+    function showMessage(text, type) {
+      message.textContent = text;
+      message.className = 'message ' + type;
+    }
+
+    function clearMessage() {
+      message.textContent = '';
+      message.className = 'message';
+    }
+
+    // เมื่อเลือกวันที่ ให้โหลดรอบรถ
+    dateInput.addEventListener('change', function() {
+      const selectedDate = dateInput.value;
+
+      availableTrips = [];
+      tripSelect.innerHTML =
+        '<option value="">-- กำลังโหลดรอบรถ --</option>';
+      tripSelect.disabled = true;
+      tripInfo.style.display = 'none';
+      clearMessage();
+
+      if (!selectedDate) {
+        tripSelect.innerHTML =
+          '<option value="">-- กรุณาเลือกวันที่ก่อน --</option>';
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+
+          if (!result || !result.success) {
+            tripSelect.innerHTML =
+              '<option value="">-- โหลดรอบรถไม่สำเร็จ --</option>';
+            showMessage(
+              result ? result.message : 'ไม่สามารถโหลดรอบรถได้',
+              'error'
+            );
+            return;
+          }
+
+          availableTrips = result.trips || [];
+
+          tripSelect.innerHTML =
+            '<option value="">-- เลือกรอบรถ --</option>';
+
+          if (availableTrips.length === 0) {
+            tripSelect.innerHTML =
+              '<option value="">-- ไม่มีรอบรถในวันที่เลือก --</option>';
+
+            showMessage(
+              'ไม่มีรอบรถที่เปิดใช้งานในวันที่เลือก',
+              'warning'
+            );
+            return;
+          }
+
+          availableTrips.forEach(function(trip, index) {
+            const option = document.createElement('option');
+
+            option.value = String(index);
+            option.textContent =
+              trip.name + ' (' + trip.start + ' → ' +
+              trip.destination + ')';
+
+            tripSelect.appendChild(option);
+          });
+
+          tripSelect.disabled = false;
+
+        })
+        .withFailureHandler(function(error) {
+          tripSelect.innerHTML =
+            '<option value="">-- โหลดรอบรถไม่สำเร็จ --</option>';
+
+          showMessage(error.message, 'error');
+        })
+        .getAvailableTrips(selectedDate);
+    });
+
+    // แสดงรายละเอียดรอบรถ
+    tripSelect.addEventListener('change', function() {
+      const index = tripSelect.value;
+
+      if (index === '' || !availableTrips[index]) {
+        tripInfo.style.display = 'none';
+        return;
+      }
+
+      const trip = availableTrips[index];
+      loadTripPassengers(dateInput.value, trip.id);
+
+      tripInfo.innerHTML = '';
+
+      const details = [
+        'รอบรถ: ' + trip.name,
+        'เส้นทาง: ' + trip.start + ' → ' + trip.destination,
+        'เวลาออก: ' + trip.departure,
+        'เวลาถึง: ' + trip.arrival
+      ];
+
+      details.forEach(function(line) {
+        const div = document.createElement('div');
+        div.textContent = line;
+        tripInfo.appendChild(div);
+      });
+
+      tripInfo.style.display = 'block';
+    });
+
+    // ส่งข้อมูลการจอง
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      clearMessage();
+
+      const selectedIndex = tripSelect.value;
+
+      if (selectedIndex === '' || !availableTrips[selectedIndex]) {
+        showMessage('กรุณาเลือกรอบรถก่อนยืนยันการจอง', 'error');
+        return;
+      }
+
+      const selectedTrip = availableTrips[selectedIndex];
+
+      const data = {
+        bookingType: document.getElementById('bookingType').value,
+        fullName: document.getElementById('fullName').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        passengerCount: Number(
+          document.getElementById('passengerCount').value
+        ),
+        travelDate: dateInput.value,
+        trip: selectedTrip.id,
+        pickup: document.getElementById('pickup').value.trim(),
+        dropoff: document.getElementById('dropoff').value.trim(),
+        note: document.getElementById('note').value.trim()
+      };
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'กำลังบันทึก...';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+
+          submitButton.disabled = false;
+          submitButton.textContent = 'ยืนยันการจอง';
+
+          if (result && result.success) {
+
+            let detail =
+              'จองรถสำเร็จ!\n\n' +
+              'รหัสการจอง: ' + result.bookingId + '\n' +
+              'ชื่อ: ' + result.fullName + '\n' +
+              'รอบรถ: ' + result.tripName + '\n' +
+              'วันที่: ' + result.travelDate + '\n' +
+              'จำนวนผู้โดยสาร: ' + result.passengerCount + '\n' +
+              'จุดขึ้น: ' + result.pickup + '\n' +
+              'จุดลง: ' + result.dropoff;
+
+            if (result.overCapacity) {
+              detail +=
+                '\n\nคำเตือน: จำนวนผู้โดยสารเกินความจุรถ' +
+                '\nยอดจองรวม: ' + result.totalPassengers +
+                '\nความจุรถ: ' + result.capacity;
+            }
+
+            alert(detail);
+
+            // ล้างเฉพาะข้อมูลผู้จอง แต่คงวันและรอบรถไว้
+          document.getElementById('bookingType').value = '';
+          document.getElementById('fullName').value = '';
+          document.getElementById('phone').value = '';
+          document.getElementById('passengerCount').value = '1';
+          document.getElementById('pickup').value = '';
+          document.getElementById('dropoff').value = '';
+          document.getElementById('note').value = '';
+          
+          // โหลดรายชื่อใหม่ รวมรายการที่เพิ่งจอง
+          loadTripPassengers(dateInput.value, selectedTrip.id);
+          
+          clearMessage();
+
+          } else {
+            showMessage(
+              'ไม่สามารถจองได้: ' +
+              (result ? result.message : 'เกิดข้อผิดพลาด'),
+              'error'
+            );
+          }
+        })
+        .withFailureHandler(function(error) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'ยืนยันการจอง';
+          showMessage('เกิดข้อผิดพลาด: ' + error.message, 'error');
+        })
+        .saveBooking(data);
+    });
+
+    function openLoginPage(page) {
+
+  google.script.run
+    .withSuccessHandler(function(url) {
+
+      if (!url) {
+        alert('ไม่พบ URL ของ Web App กรุณาตรวจสอบการ Deploy');
+        return;
+      }
+
+      window.top.location.href =
+        url + '?page=' + encodeURIComponent(page);
+
+    })
+    .withFailureHandler(function(error) {
+
+      alert('ไม่สามารถเปิดหน้าล็อกอินได้: ' + error.message);
+
+    })
+    .getWebAppUrl();
+
+}
+
+  </script>
+
+</body>
+</html>

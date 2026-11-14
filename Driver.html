@@ -1,0 +1,1058 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบคนขับรถ</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f5f9;
+      color: #202938;
+    }
+
+    .header {
+      background: #17365d;
+      color: white;
+      padding: 22px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 23px;
+    }
+
+    .header p {
+      margin: 7px 0 0;
+      color: #dce6f1;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 25px auto;
+      padding: 0 16px;
+    }
+
+    .panel {
+      background: white;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 2px 9px #0000000c;
+      margin-bottom: 18px;
+    }
+
+    .login-box {
+      max-width: 420px;
+      margin: 60px auto;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      margin: 8px 0 14px;
+      border: 1px solid #ccd3df;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .primary {
+      background: #1769aa;
+      color: white;
+      width: 100%;
+    }
+
+    .logout {
+      background: #d9534f;
+      color: white;
+    }
+
+    .refresh {
+      background: #e6eef8;
+      color: #17365d;
+    }
+
+    .trip-card {
+      border: 1px solid #e0e5ed;
+      border-radius: 12px;
+      margin: 15px 0;
+      overflow: hidden;
+      background: white;
+    }
+
+    .trip-head {
+      background: #eaf1f8;
+      padding: 16px;
+    }
+
+    .trip-head h3 {
+      margin: 0 0 8px;
+      color: #17365d;
+    }
+
+    .trip-body {
+      padding: 16px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .info {
+      background: #f6f8fb;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .info small {
+      display: block;
+      color: #6b7280;
+      margin-bottom: 5px;
+    }
+
+    .passenger {
+      border-top: 1px solid #e5e7eb;
+      padding: 15px 0;
+    }
+
+    .passenger:first-child {
+      border-top: none;
+    }
+
+    .passenger strong {
+      font-size: 16px;
+    }
+
+    .route {
+      margin-top: 10px;
+      padding: 12px;
+      background: #f5f8fc;
+      border-radius: 8px;
+      line-height: 1.8;
+    }
+
+    .count {
+      display: inline-block;
+      background: #d9ead3;
+      color: #274e13;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .message {
+      margin-top: 12px;
+      color: #c0392b;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+    
+/* ==================================
+   ระบบมอบหมายรถ
+================================== */
+
+.assignment-section {
+  border: 1px solid #dce5ef;
+  border-radius: 10px;
+  padding: 18px;
+  margin-top: 15px;
+}
+
+.assignment-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.assignment-form label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.assignment-form input,
+.assignment-form select,
+.assignment-form textarea {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #ccd3df;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-top: 5px;
+}
+
+.assignment-form textarea {
+  min-height: 75px;
+  resize: vertical;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.assignment-btn {
+  background: #1769aa;
+  color: white;
+  margin: 5px 4px 5px 0;
+}
+
+.edit-btn {
+  background: #f0ad4e;
+  color: #222;
+}
+
+.cancel-btn {
+  background: #d9534f;
+  color: white;
+}
+
+.assignment-card {
+  border: 1px solid #dce5ef;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 12px 0;
+  background: #fff;
+}
+
+.assignment-card h3 {
+  color: #17365d;
+  margin: 0 0 10px;
+}
+
+.assignment-status {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 15px;
+  background: #d9ead3;
+  color: #274e13;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.assignment-message {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #c0392b;
+}
+
+@media (max-width: 600px) {
+  .assignment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: auto;
+  }
+}
+
+
+
+    @media (max-width: 600px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>ระบบจัดการรถตู้บริษัท</h1>
+    <p>Driver Dashboard | ระบบสำหรับคนขับรถ</p>
+  </div>
+
+  <div class="container">
+
+    <!-- LOGIN -->
+    <div id="loginSection" class="panel login-box">
+      <h2>เข้าสู่ระบบคนขับ</h2>
+
+      <label>ชื่อผู้ใช้</label>
+      <input id="username" autocomplete="username">
+
+      <label>รหัสผ่าน</label>
+      <input id="password" type="password"
+        autocomplete="current-password">
+
+      <button class="primary" onclick="login()">
+        เข้าสู่ระบบ
+      </button>
+
+      <div id="loginMessage" class="message"></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboardSection" class="hidden">
+
+      <div class="panel">
+        <h2>ข้อมูลคนขับ</h2>
+        <p id="driverInfo"></p>
+
+        <button class="refresh" onclick="loadDashboard()">
+          รีเฟรชข้อมูล
+        </button>
+
+        <button class="logout" onclick="logout()">
+          ออกจากระบบ
+        </button>
+      </div>
+
+      <div class="panel">
+        <h2>ภาพรวมการเดินรถ</h2>
+        <div class="info-grid">
+          <div class="info">
+            <small>จำนวนรอบที่มีผู้จอง</small>
+            <strong id="totalTrips">0</strong>
+          </div>
+
+          <div class="info">
+            <small>จำนวนผู้โดยสารรวม</small>
+            <strong id="totalPassengers">0</strong>
+          </div>
+        </div>
+      </div>
+      
+<!-- ==================================
+     ระบบมอบหมายรถ
+================================== -->
+
+<div class="panel">
+  <h2>ระบบมอบหมายรถ</h2>
+
+  <div class="assignment-section">
+    <h3>มอบหมายรถให้ตัวเอง</h3>
+
+    <div class="assignment-form">
+
+      <div>
+        <label for="assignmentDate">วันที่เดินทาง</label>
+       <input type="date"
+  id="assignmentDate"
+  onchange="loadTripsForAssignmentDate()">
+      </div>
+
+      <div>
+        <label for="assignmentTrip">รอบเดินรถ</label>
+        <select id="assignmentTrip">
+          <option value="">กรุณาเลือกวันที่ก่อน</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="assignmentVehicle">เลือกรถ</label>
+        <select id="assignmentVehicle">
+          <option value="">กำลังโหลดข้อมูลรถ</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="assignmentDeparture">เวลาออกเดินทาง</label>
+        <input type="time" id="assignmentDeparture">
+      </div>
+
+      <div>
+        <label for="assignmentArrival">เวลาถึง</label>
+        <input type="time" id="assignmentArrival">
+      </div>
+
+      <div class="full-width">
+        <label for="assignmentNote">หมายเหตุ</label>
+        <textarea id="assignmentNote"
+          placeholder="ระบุหมายเหตุเพิ่มเติม (ถ้ามี)"></textarea>
+      </div>
+
+      <div class="full-width">
+        <button class="assignment-btn"
+          id="saveAssignmentBtn"
+          onclick="saveAssignmentFromPage()">
+          บันทึกการมอบหมายรถ
+        </button>
+
+        <button class="refresh hidden"
+          id="resetAssignmentBtn"
+          onclick="resetAssignmentForm()">
+          ยกเลิกการแก้ไข
+        </button>
+      </div>
+
+    </div>
+
+    <div id="assignmentMessage"
+      class="assignment-message"></div>
+  </div>
+
+  <div class="assignment-section">
+    <h3>รอบที่ฉันรับผิดชอบ</h3>
+    <div id="myAssignmentList">
+      กำลังโหลดข้อมูล...
+    </div>
+  </div>
+
+  <div class="assignment-section">
+    <h3>รอบรถทั้งหมดของบริษัท</h3>
+    <div id="allAssignmentList">
+      กำลังโหลดข้อมูล...
+    </div>
+  </div>
+</div>
+
+
+      <div class="panel">
+        <h2>รายการเดินรถทั้งหมด</h2>
+        <div id="tripList">กำลังโหลดข้อมูล...</div>
+      </div>
+
+    </div>
+
+  </div>
+
+<script>
+  let driverToken = '';
+
+  function login() {
+    const username =
+      document.getElementById('username').value.trim();
+
+    const password =
+      document.getElementById('password').value;
+
+    const message =
+      document.getElementById('loginMessage');
+
+    message.textContent = 'กำลังเข้าสู่ระบบ...';
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (!result.success) {
+          message.textContent = result.message;
+          return;
+        }
+
+        driverToken = result.token;
+
+        document.getElementById('loginSection')
+          .classList.add('hidden');
+
+        document.getElementById('dashboardSection')
+          .classList.remove('hidden');
+
+        document.getElementById('driverInfo').textContent =
+          'คนขับ: ' + result.driverName +
+          ' | รหัสรถ: ' + (result.vehicleId || '-');
+
+        loadDashboard();
+      })
+      .withFailureHandler(function(error) {
+        message.textContent = error.message;
+      })
+      .loginDriver({
+        username: username,
+        password: password
+      });
+  }
+
+  function loadDashboard() {
+    document.getElementById('tripList').textContent =
+      'กำลังโหลดข้อมูล...';
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (!result.success) {
+          document.getElementById('tripList').textContent =
+            result.message;
+          return;
+        }
+
+        document.getElementById('totalTrips').textContent =
+          result.totalTrips;
+
+        document.getElementById('totalPassengers').textContent =
+          result.totalPassengers;
+
+        renderTrips(result.trips);
+        loadAssignmentData();
+      })
+      .withFailureHandler(function(error) {
+        document.getElementById('tripList').textContent =
+          error.message;
+      })
+      .getDriverDashboardData(driverToken);
+  }
+
+  function renderTrips(trips) {
+    const container = document.getElementById('tripList');
+
+    if (!trips || trips.length === 0) {
+      container.textContent = 'ยังไม่มีรายการจองรถ';
+      return;
+    }
+
+    container.innerHTML = '';
+
+    trips.forEach(function(trip, index) {
+      const card = document.createElement('div');
+      card.className = 'trip-card';
+
+      const heading = document.createElement('div');
+      heading.className = 'trip-head';
+
+      const title = document.createElement('h3');
+      title.textContent =
+        (index + 1) + '. ' + trip.tripName;
+
+      const date = document.createElement('div');
+      date.textContent = 'วันที่เดินทาง: ' + trip.date;
+
+      const count = document.createElement('span');
+      count.className = 'count';
+      count.textContent =
+        'ผู้โดยสาร ' + trip.passengerCount + ' คน';
+
+      heading.append(title, date, count);
+
+      const body = document.createElement('div');
+      body.className = 'trip-body';
+
+      const grid = document.createElement('div');
+      grid.className = 'info-grid';
+
+      const details = [
+        ['เส้นทาง', trip.start + ' → ' + trip.destination],
+        ['เวลาออก', trip.departure || '-'],
+        ['เวลาถึง', trip.arrival || '-'],
+        ['ทะเบียนรถ', trip.plate || '-'],
+        ['คนขับ', trip.driverName || '-'],
+        ['ความจุรถ', trip.capacity
+          ? trip.capacity + ' ที่นั่ง'
+          : 'ยังไม่ระบุ']
+      ];
+
+      details.forEach(function(item) {
+        const info = document.createElement('div');
+        info.className = 'info';
+
+        const small = document.createElement('small');
+        small.textContent = item[0];
+
+        const strong = document.createElement('strong');
+        strong.textContent = item[1];
+
+        info.append(small, strong);
+        grid.appendChild(info);
+      });
+
+      body.appendChild(grid);
+
+      const passengerTitle = document.createElement('h3');
+      passengerTitle.textContent = 'รายชื่อผู้โดยสาร';
+      passengerTitle.style.marginTop = '22px';
+
+      body.appendChild(passengerTitle);
+
+      trip.passengers.forEach(function(person, personIndex) {
+        const passenger = document.createElement('div');
+        passenger.className = 'passenger';
+
+        const name = document.createElement('strong');
+        name.textContent =
+          (personIndex + 1) + '. ' + person.fullName;
+
+        const phone = document.createElement('div');
+        phone.textContent = 'โทรศัพท์: ' + person.phone;
+
+        const amount = document.createElement('div');
+        amount.textContent =
+          'จำนวนผู้โดยสาร: ' + person.passengerCount + ' คน';
+
+        const route = document.createElement('div');
+        route.className = 'route';
+
+        const pickup = document.createElement('div');
+        pickup.textContent = 'จุดขึ้นรถ: ' + person.pickup;
+
+        const dropoff = document.createElement('div');
+        dropoff.textContent = 'จุดลงรถ: ' + person.dropoff;
+
+        route.append(pickup, dropoff);
+
+        passenger.append(name, phone, amount, route);
+
+        if (person.note) {
+          const note = document.createElement('div');
+          note.textContent = 'หมายเหตุ: ' + person.note;
+          passenger.appendChild(note);
+        }
+
+        body.appendChild(passenger);
+      });
+
+      card.append(heading, body);
+      container.appendChild(card);
+    });
+  }
+  // ==================================
+// ระบบมอบหมายรถ
+// ==================================
+
+let editingAssignmentId = "";
+
+
+// โหลดข้อมูลการมอบหมายรถ
+function loadAssignmentData() {
+  google.script.run
+    .withSuccessHandler(function(result) {
+
+      if (!result || !result.success) {
+        document.getElementById("assignmentMessage").textContent =
+          result?.message || "ไม่สามารถโหลดข้อมูลการมอบหมายรถได้";
+        return;
+      }
+
+      // กำหนดวันที่จองล่วงหน้า 7 วัน
+      const dateInput = document.getElementById("assignmentDate");
+
+      const today = new Date();
+      const localToday = new Date(
+        today.getTime() - today.getTimezoneOffset() * 60000
+      ).toISOString().split("T")[0];
+
+      const lastDate = new Date(today);
+      lastDate.setDate(lastDate.getDate() + 7);
+
+      const localLastDate = new Date(
+        lastDate.getTime() - lastDate.getTimezoneOffset() * 60000
+      ).toISOString().split("T")[0];
+
+      dateInput.min = localToday;
+      dateInput.max = localLastDate;
+
+      // โหลดรายการรถ
+      const vehicleSelect =
+        document.getElementById("assignmentVehicle");
+
+      vehicleSelect.innerHTML =
+        '<option value="">กรุณาเลือกรถ</option>';
+
+      (result.vehicles || []).forEach(function(vehicle) {
+        const option = document.createElement("option");
+        option.value = vehicle.vehicleId;
+        option.textContent =
+          vehicle.plate + " (ความจุ " + vehicle.capacity + " คน)";
+        vehicleSelect.appendChild(option);
+      });
+
+      // แสดงรายการที่ฉันรับผิดชอบ
+      renderMyAssignments(result.myAssignments || []);
+
+      // แสดงรายการรถทั้งหมด
+      renderAllAssignments(result.assignments || []);
+
+    })
+    .withFailureHandler(function(error) {
+      document.getElementById("assignmentMessage").textContent =
+        error.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+    })
+    .getDriverAssignmentData(driverToken);
+}
+
+
+// โหลดรอบเดินรถตามวันที่เลือก
+function loadTripsForAssignmentDate(selectedTripId) {
+
+  const date = document.getElementById("assignmentDate").value;
+  const tripSelect = document.getElementById("assignmentTrip");
+
+  tripSelect.innerHTML =
+    '<option value="">กำลังโหลดรอบเดินรถ...</option>';
+
+  if (!date) {
+    tripSelect.innerHTML =
+      '<option value="">กรุณาเลือกวันที่ก่อน</option>';
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+
+      tripSelect.innerHTML =
+        '<option value="">กรุณาเลือกรอบเดินรถ</option>';
+
+      if (!result || !result.success) {
+        tripSelect.innerHTML =
+          '<option value="">ไม่พบข้อมูลรอบเดินรถ</option>';
+        return;
+      }
+
+      (result.trips || []).forEach(function(trip) {
+        const option = document.createElement("option");
+        option.value = trip.id;
+        option.textContent =
+          trip.name + " (" + trip.start + " → " + trip.destination + ")";
+        tripSelect.appendChild(option);
+      });
+
+      if (selectedTripId) {
+  tripSelect.value = selectedTripId;
+}
+
+    })
+    .withFailureHandler(function(error) {
+      tripSelect.innerHTML =
+        '<option value="">โหลดข้อมูลไม่สำเร็จ</option>';
+      console.error(error);
+    })
+    .getAvailableTrips(date);
+}
+// ==================================
+// แสดงรายการมอบหมายรถ
+// ==================================
+
+function renderMyAssignments(assignments) {
+
+  const container = document.getElementById("myAssignmentList");
+  container.innerHTML = "";
+
+  if (!assignments.length) {
+    container.textContent = "ยังไม่มีรอบรถที่คุณรับผิดชอบ";
+    return;
+  }
+
+  assignments.forEach(function(item) {
+
+    const card = document.createElement("div");
+    card.className = "assignment-card";
+
+    const title = document.createElement("h3");
+    title.textContent = item.tripName || "รอบเดินรถ";
+
+    const details = document.createElement("p");
+    details.textContent =
+      "วันที่: " + item.date +
+      " | รถ: " + item.vehicleId +
+      " | คนขับ: " + item.driverName +
+      " | เวลา: " + item.departure + " - " + item.arrival;
+
+    const note = document.createElement("p");
+    note.textContent = "หมายเหตุ: " + (item.note || "-");
+
+    const status = document.createElement("span");
+    status.className = "assignment-status";
+    status.textContent = item.status || "เปิดใช้งาน";
+
+    card.appendChild(title);
+    card.appendChild(details);
+    card.appendChild(note);
+    card.appendChild(status);
+
+    // ปุ่มแก้ไขและยกเลิก
+    if (item.status === "เปิดใช้งาน") {
+
+      const editButton = document.createElement("button");
+      editButton.className = "assignment-btn edit-btn";
+      editButton.textContent = "แก้ไข";
+      editButton.onclick = function() {
+        editAssignment(item.assignmentId);
+      };
+
+      const cancelButton = document.createElement("button");
+      cancelButton.className = "assignment-btn cancel-btn";
+      cancelButton.textContent = "ยกเลิก";
+      cancelButton.onclick = function() {
+        cancelAssignment(item.assignmentId);
+      };
+
+      card.appendChild(editButton);
+      card.appendChild(cancelButton);
+    }
+
+    container.appendChild(card);
+  });
+}
+
+
+// แสดงรอบรถทั้งหมดของบริษัท
+function renderAllAssignments(assignments) {
+
+  const container = document.getElementById("allAssignmentList");
+  container.innerHTML = "";
+
+  if (!assignments.length) {
+    container.textContent = "ยังไม่มีข้อมูลการมอบหมายรถ";
+    return;
+  }
+
+  assignments.forEach(function(item) {
+
+    const card = document.createElement("div");
+    card.className = "assignment-card";
+
+    const title = document.createElement("h3");
+    title.textContent = item.tripName || "รอบเดินรถ";
+
+    const details = document.createElement("p");
+    details.textContent =
+      "วันที่: " + item.date +
+      " | รถ: " + item.vehicleId +
+      " | คนขับ: " + item.driverName +
+      " | เวลา: " + item.departure + " - " + item.arrival;
+
+    const status = document.createElement("span");
+    status.className = "assignment-status";
+    status.textContent = item.status || "เปิดใช้งาน";
+
+    card.appendChild(title);
+    card.appendChild(details);
+    card.appendChild(status);
+
+    container.appendChild(card);
+  });
+}
+// ==================================
+// บันทึกการมอบหมายรถ
+// ==================================
+
+function saveAssignmentFromPage() {
+
+  const data = {
+    date: document.getElementById("assignmentDate").value,
+    tripId: document.getElementById("assignmentTrip").value,
+    vehicleId: document.getElementById("assignmentVehicle").value,
+    departure: document.getElementById("assignmentDeparture").value,
+    arrival: document.getElementById("assignmentArrival").value,
+    note: document.getElementById("assignmentNote").value.trim()
+  };
+
+  const message = document.getElementById("assignmentMessage");
+
+  if (!data.date || !data.tripId || !data.vehicleId ||
+      !data.departure || !data.arrival) {
+    message.textContent = "กรุณากรอกข้อมูลให้ครบทุกช่องที่จำเป็น";
+    return;
+  }
+
+  if (data.arrival <= data.departure) {
+    message.textContent = "เวลาถึงต้องมากกว่าเวลาออกเดินทาง";
+    return;
+  }
+
+  const button = document.getElementById("saveAssignmentBtn");
+  button.disabled = true;
+  message.textContent = "กำลังบันทึกข้อมูล...";
+
+  if (editingAssignmentId) {
+
+    data.assignmentId = editingAssignmentId;
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        button.disabled = false;
+
+        message.textContent =
+          result.message || "แก้ไขข้อมูลเรียบร้อย";
+
+        if (result.success) {
+          resetAssignmentForm();
+          loadAssignmentData();
+        }
+      })
+      .withFailureHandler(function(error) {
+        button.disabled = false;
+        message.textContent = error.message || "เกิดข้อผิดพลาด";
+      })
+      .updateDriverAssignment(driverToken, data);
+
+  } else {
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        button.disabled = false;
+
+        message.textContent =
+          result.message || "บันทึกข้อมูลเรียบร้อย";
+
+        if (result.success) {
+          resetAssignmentForm();
+          loadAssignmentData();
+        }
+      })
+      .withFailureHandler(function(error) {
+        button.disabled = false;
+        message.textContent = error.message || "เกิดข้อผิดพลาด";
+      })
+      .saveDriverAssignment(driverToken, data);
+  }
+}
+// ==================================
+// แก้ไขการมอบหมายรถ
+// ==================================
+
+function editAssignment(assignmentId) {
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+
+      if (!result || !result.success) {
+        document.getElementById("assignmentMessage").textContent =
+          result?.message || "ไม่พบข้อมูลการมอบหมายรถ";
+        return;
+      }
+
+      const item = result.assignment;
+
+      editingAssignmentId = assignmentId;
+
+      // ใส่ข้อมูลเดิมลงในแบบฟอร์ม
+      document.getElementById("assignmentDate").value = item.date;
+      document.getElementById("assignmentVehicle").value = item.vehicleId;
+      document.getElementById("assignmentDeparture").value = item.departure;
+      document.getElementById("assignmentArrival").value = item.arrival;
+      document.getElementById("assignmentNote").value = item.note || "";
+
+      // โหลดรอบเดินรถตามวันที่
+      loadTripsForAssignmentDate(item.tripId);
+
+      // เปลี่ยนปุ่มเป็นโหมดแก้ไข
+      document.getElementById("saveAssignmentBtn").textContent =
+        "บันทึกการแก้ไข";
+
+      document.getElementById("resetAssignmentBtn").classList.remove("hidden");
+
+      document.getElementById("assignmentMessage").textContent =
+        "กำลังแก้ไขรอบ: " + (item.tripName || "");
+
+      // เลื่อนไปยังแบบฟอร์ม
+      document.getElementById("assignmentDate").scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+
+    })
+    .withFailureHandler(function(error) {
+      document.getElementById("assignmentMessage").textContent =
+        error.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+    })
+    .getDriverAssignmentById(driverToken, assignmentId);
+}
+
+  function logout() {
+    google.script.run
+      .withSuccessHandler(function() {
+        driverToken = '';
+
+        document.getElementById('dashboardSection')
+          .classList.add('hidden');
+
+        document.getElementById('loginSection')
+          .classList.remove('hidden');
+
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('loginMessage').textContent = '';
+      })
+      .logoutDriver(driverToken);
+  }
+  // ==================================
+// ยกเลิกการมอบหมายรถ
+// ==================================
+
+function cancelAssignment(assignmentId) {
+
+  const confirmed = confirm(
+    "คุณต้องการยกเลิกการรับผิดชอบรอบรถนี้ใช่หรือไม่?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const message = document.getElementById("assignmentMessage");
+
+  message.textContent = "กำลังยกเลิกการมอบหมายรถ...";
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+
+      if (!result || !result.success) {
+        message.textContent =
+          result?.message || "ไม่สามารถยกเลิกการมอบหมายรถได้";
+        return;
+      }
+
+      message.textContent =
+        result.message || "ยกเลิกการมอบหมายรถเรียบร้อย";
+
+      resetAssignmentForm();
+      loadAssignmentData();
+
+    })
+    .withFailureHandler(function(error) {
+
+      message.textContent =
+        error.message || "เกิดข้อผิดพลาดในการยกเลิก";
+
+    })
+    .cancelDriverAssignment(driverToken, assignmentId);
+}
+// ==================================
+// ล้างแบบฟอร์มมอบหมายรถ
+// ==================================
+
+function resetAssignmentForm() {
+
+  editingAssignmentId = "";
+
+  document.getElementById("assignmentDate").value = "";
+
+  document.getElementById("assignmentTrip").innerHTML =
+    '<option value="">กรุณาเลือกวันที่ก่อน</option>';
+
+  document.getElementById("assignmentVehicle").value = "";
+
+  document.getElementById("assignmentDeparture").value = "";
+
+  document.getElementById("assignmentArrival").value = "";
+
+  document.getElementById("assignmentNote").value = "";
+
+  document.getElementById("saveAssignmentBtn").textContent =
+    "บันทึกการมอบหมายรถ";
+
+  document.getElementById("resetAssignmentBtn").classList.add("hidden");
+
+  document.getElementById("assignmentMessage").textContent = "";
+}
+</script>
+
+</body>
+</html>
